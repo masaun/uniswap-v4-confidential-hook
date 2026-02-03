@@ -1,0 +1,6 @@
+[package]
+name = "strategy"
+type = "bin"
+authors = [""]
+
+[dependencies]
