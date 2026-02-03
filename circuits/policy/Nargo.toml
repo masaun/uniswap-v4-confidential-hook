@@ -1,0 +1,6 @@
+[package]
+name = "policy"
+type = "bin"
+authors = [""]
+
+[dependencies]
