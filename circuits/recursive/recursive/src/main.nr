@@ -1,3 +1,5 @@
+//mod tests;
+
 use bb_proof_verification::{
     UltraHonkProof, 
     UltraHonkVerificationKey, 
