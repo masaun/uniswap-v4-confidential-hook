@@ -1,6 +1,6 @@
 import { Barretenberg, UltraHonkBackend } from "@aztec/bb.js";
-import innerCircuit from "../circuits/inner/target/inner.json" with { type: "json" };
-import recursiveCircuit from "../circuits/recursive/target/recursive.json" with { type: "json" };
+import innerCircuit from "../inner/target/inner.json" with { type: "json" };
+import recursiveCircuit from "../recursive/target/recursive.json" with { type: "json" };
 import { CompiledCircuit, Noir } from "@noir-lang/noir_js";
 
 // Helper function to convert proof bytes to field elements
