@@ -6,3 +6,6 @@ authors = [""]
 [dependencies]
 # Poseidon hash function for Noir
 poseidon = { tag = "v0.1.1", git = "https://github.com/noir-lang/poseidon" }
+
+# ZK-Kit: Merkle tree libarry
+binary_merkle_root = { git = "https://github.com/privacy-scaling-explorations/zk-kit.noir", tag = "binary-merkle-root-v0.0.1", directory = "packages/binary-merkle-root" }

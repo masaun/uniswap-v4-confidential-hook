@@ -30,3 +30,6 @@ docs/
 
 # Node modules
 node_modules/
+
+# Other files
+.DS_Store
