@@ -1,4 +1,4 @@
-//mod tests;
+mod tests;
 mod libs;
 mod types;
 
@@ -15,7 +15,7 @@ use types::{
 // =====================================
 // Private Inputs Struct
 // =====================================
-struct PrivateInputs {
+pub struct PrivateInputs {
     amount: Field,
     token_in: Field,
     token_out: Field,
