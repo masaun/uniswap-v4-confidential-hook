@@ -2,20 +2,20 @@
 mod libs;
 mod types;
 
+use binary_merkle_root::binary_merkle_root;
 use libs::{
     poseidon::poseidon_hash::{poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
 };
+use types::{
+    public_inputs::PublicInputs,
+    public_outputs::PublicOutputs
+};
 
-use binary_merkle_root::binary_merkle_root;
 
 // =====================================
-// Policy Proof Circuit
-// Proves trade follows internal policy.
+// Private Inputs Struct
 // =====================================
-fn main(
-    // -------------------------
-    // Private Inputs
-    // -------------------------
+struct PrivateInputs {
     amount: Field,
     token_in: Field,
     token_out: Field,
@@ -38,14 +38,53 @@ fn main(
     policy_secret: Field,        // stands for "policy witness"
     approver_secret: Field,      // stands for "signature witness"
     nullifier_secret: Field,     // stands for "nullifier witness"
+}
 
-    // -------------------------
+
+// =====================================
+// @title - Policy Proof Circuit
+// @notice - Proves trade follows internal policy.
+// =====================================
+fn main(
+    private_inputs: PrivateInputs,
+    public_inputs: PublicInputs,
+) -> pub (PublicOutputs) {
+    // --------------------------
+    // Private Inputs
+    // --------------------------
+    let amount = private_inputs.amount;
+    let token_in = private_inputs.token_in;
+    let token_out = private_inputs.token_out;
+    let max_limit = private_inputs.max_limit;
+    let nonce = private_inputs.nonce;
+    let pool_id_hash = private_inputs.pool_id_hash;
+
+    let intent_commitment = private_inputs.intent_commitment;
+    let policy_commitment = private_inputs.policy_commitment;
+
+    let intent_merkle_proof_length = private_inputs.intent_merkle_proof_length;
+    let intent_merkle_proof_indices = private_inputs.intent_merkle_proof_indices;
+    let intent_merkle_proof_siblings = private_inputs.intent_merkle_proof_siblings;
+
+    let policy_merkle_proof_length = private_inputs.policy_merkle_proof_length;
+    let policy_merkle_proof_indices = private_inputs.policy_merkle_proof_indices;
+    let policy_merkle_proof_siblings = private_inputs.policy_merkle_proof_siblings;
+
+    let intent_secret = private_inputs.intent_secret;
+    let policy_secret = private_inputs.policy_secret;
+    let approver_secret = private_inputs.approver_secret;
+    let nullifier_secret = private_inputs.nullifier_secret;
+
+    // --------------------------
     // Public Inputs
-    // -------------------------
-    intent_merkle_root: pub Field,
-    policy_merkle_root: pub Field,
-    nullifier: pub Field
-) -> pub (Field, Field, Field) {
+    // --------------------------
+    let nullifier = public_inputs.nullifier;
+    let intent_merkle_root = public_inputs.intent_merkle_root;
+    let policy_merkle_root = public_inputs.policy_merkle_root;
+
+    // --------------------------
+    // Circuit Logic
+    // --------------------------
     // 1-1) Intent binding
     let computed_intent_commitment = poseidon_hash_4([amount, token_in, token_out, intent_secret]);
     assert(computed_intent_commitment == intent_commitment, "intent commitments don't match");
@@ -95,6 +134,11 @@ fn main(
     ]);
     assert(computed_nullifier == nullifier, "nullifiers don't match");
 
-    // @dev - Return nullifier as public output 
-    (intent_merkle_root, policy_merkle_root, nullifier)
+    // @dev - Return the public output 
+    let public_outputs = PublicOutputs {
+        intent_merkle_root,
+        policy_merkle_root,
+        nullifier
+    };
+    public_outputs
 }
