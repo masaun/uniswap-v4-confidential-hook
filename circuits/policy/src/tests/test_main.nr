@@ -10,6 +10,7 @@ use crate::{
         public_outputs::PublicOutputs
     },
     PrivateInputs,
+    MERKLE_TREE_DEPTH
 };
 
 
@@ -32,12 +33,12 @@ fn test_main_success() {
     let pool_id_hash = 12345;
 
     let intent_merkle_proof_length = 0;
-    let intent_merkle_proof_indices = [0; 16];
-    let intent_merkle_proof_siblings = [0; 16];
+    let intent_merkle_proof_indices = [0; MERKLE_TREE_DEPTH];
+    let intent_merkle_proof_siblings = [0; MERKLE_TREE_DEPTH];
 
     let policy_merkle_proof_length = 0;
-    let policy_merkle_proof_indices = [0; 16];
-    let policy_merkle_proof_siblings = [0; 16];
+    let policy_merkle_proof_indices = [0; MERKLE_TREE_DEPTH];
+    let policy_merkle_proof_siblings = [0; MERKLE_TREE_DEPTH];
 
     let intent_secret = 999;
     let policy_secret = 888;
@@ -111,11 +112,6 @@ fn test_main_success() {
         nullifier_hash,
     };
 
-    //------------------------------------------------
-    // Compute expected nullifier hash
-    //-------------------------------------------------
-    let expected_nullifier_hash = poseidon_hash_1([nullifier]);
-    
     //------------------------------------------------
     // Run the Circuit with Test Private/PublicInputs
     //-------------------------------------------------
