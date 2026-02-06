@@ -65,19 +65,20 @@ fn test_main_success() {
         nullifier_secret,
     };
 
+    //------------------------------------------------
+    // Compute expected nullifier hash
+    //-------------------------------------------------
+    let nullifier_hash = poseidon_hash_1([nullifier]);
+
     //--------------------------
     // Test Public Inputs
     //--------------------------
     let public_inputs = PublicInputs {
         twap_price: 155,
-        block_timestamp: 1500
+        block_timestamp: 1500,  
+        nullifier_hash: nullifier_hash,
     };
     
-    //------------------------------------------------
-    // Compute expected nullifier hash
-    //-------------------------------------------------
-    let expected_nullifier_hash = poseidon_hash_1([nullifier]);
-
     //------------------------------------------------
     // Run the Circuit with Test Private/PublicInputs
     //-------------------------------------------------
@@ -89,6 +90,6 @@ fn test_main_success() {
     //----------------------------- 
     // Validate the Public Outputs
     //-----------------------------
-    assert(public_outputs.intent_merkle_root == public_outputs.intent_merkle_root, "Intent Merkle Roots don't match");
-    assert(public_outputs.nullifier_hash == expected_nullifier_hash, "Nullifier Hashes don't match");
+    assert(public_outputs.intent_merkle_root == private_inputs.intent_merkle_root, "Intent Merkle Roots don't match");
+    assert(public_outputs.nullifier_hash == public_inputs.nullifier_hash, "Nullifier Hashes don't match");
 }

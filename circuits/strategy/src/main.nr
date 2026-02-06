@@ -73,6 +73,7 @@ fn main(
     // --------------------------
     let twap_price = public_inputs.twap_price;
     let block_timestamp = public_inputs.block_timestamp;
+    let nullifier_hash = public_inputs.nullifier_hash;
 
     // --------------------------
     // Circuit Logic
@@ -112,7 +113,8 @@ fn main(
     assert(computed_nullifier == nullifier, "nullifiers don't match");
 
     // 7) Compute nullifier hash to be stored on-chain
-    let nullifier_hash = poseidon_hash_1([nullifier]);
+    let computed_nullifier_hash = poseidon_hash_1([nullifier]);
+    assert(computed_nullifier_hash == nullifier_hash, "nullifier hashes don't match");
 
     // @dev - Return the public output 
     let public_outputs = PublicOutputs {
