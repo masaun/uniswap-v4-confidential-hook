@@ -4,7 +4,7 @@ mod types;
 
 use binary_merkle_root::binary_merkle_root;
 use libs::{
-    poseidon::poseidon_hash::{poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
+    poseidon::poseidon_hash::{poseidon_hash_1, poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
 };
 use types::{
     public_inputs::PublicInputs,
@@ -16,7 +16,7 @@ use types::{
 // Private Inputs Struct
 // =====================================
 pub struct PrivateInputs {
-    amount: Field,
+    amount: Field,    // amount_in for the trade
     token_in: Field,
     token_out: Field,
     max_limit: Field,
@@ -34,6 +34,8 @@ pub struct PrivateInputs {
     policy_merkle_proof_indices: [u1; 16],
     policy_merkle_proof_siblings: [Field; 16],
 
+    nullifier: Field,            // Nullifier to prevent double approvals
+
     intent_secret: Field,        // stands for "intent witness"
     policy_secret: Field,        // stands for "policy witness"
     approver_secret: Field,      // stands for "signature witness"
@@ -41,10 +43,10 @@ pub struct PrivateInputs {
 }
 
 
-// =====================================
+// =================================================
 // @title - Policy Proof Circuit
 // @notice - Proves trade follows internal policy.
-// =====================================
+// =================================================
 fn main(
     private_inputs: PrivateInputs,
     public_inputs: PublicInputs,
@@ -70,6 +72,8 @@ fn main(
     let policy_merkle_proof_indices = private_inputs.policy_merkle_proof_indices;
     let policy_merkle_proof_siblings = private_inputs.policy_merkle_proof_siblings;
 
+    let nullifier = private_inputs.nullifier;
+
     let intent_secret = private_inputs.intent_secret;
     let policy_secret = private_inputs.policy_secret;
     let approver_secret = private_inputs.approver_secret;
@@ -78,7 +82,7 @@ fn main(
     // --------------------------
     // Public Inputs
     // --------------------------
-    let nullifier = public_inputs.nullifier;
+    let nullifier_hash = public_inputs.nullifier_hash;
     let intent_merkle_root = public_inputs.intent_merkle_root;
     let policy_merkle_root = public_inputs.policy_merkle_root;
 
@@ -134,11 +138,15 @@ fn main(
     ]);
     assert(computed_nullifier == nullifier, "nullifiers don't match");
 
+    // 7) Compute nullifier hash to be stored on-chain
+    let computed_nullifier_hash = poseidon_hash_1([nullifier]);
+    assert(computed_nullifier_hash == nullifier_hash, "nullifier hashes don't match");
+
     // @dev - Return the public output 
     let public_outputs = PublicOutputs {
         intent_merkle_root,
         policy_merkle_root,
-        nullifier
+        nullifier_hash
     };
     public_outputs
 }
