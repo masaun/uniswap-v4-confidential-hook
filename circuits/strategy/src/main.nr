@@ -9,7 +9,7 @@ fn main(
     // -------------------------
     secret amount: Field,
     secret limit_price: Field,
-    secret epsilon_bps: Field,     // e.g. 50 = 0.50%
+    secret slippage_tolerance_bps: Field,     // e.g. 50 = 0.50%
     secret start_time: Field,
     secret end_time: Field,
 
@@ -31,8 +31,8 @@ fn main(
     block_timestamp.assert_less_than_or_equal(end_time);
 
     // 3) TWAP slippage bound check:
-    // limit_price >= twap_price * (1 - epsilon_bps/10000)
-    let min_price = twap_price * (10000 - epsilon_bps) / 10000;
+    // limit_price >= twap_price * (1 - slippage_tolerance_bps/10000)
+    let min_price = twap_price * (10000 - slippage_tolerance_bps) / 10000;
     limit_price.assert_greater_than_or_equal(min_price);
 
     // 4) sanity binding to pool state

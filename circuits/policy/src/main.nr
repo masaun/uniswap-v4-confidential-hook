@@ -1,62 +1,144 @@
-//mod tests;
+mod tests;
+mod libs;
+mod types;
+
+use binary_merkle_root::binary_merkle_root;
+use libs::{
+    poseidon::poseidon_hash::{poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
+};
+use types::{
+    public_inputs::PublicInputs,
+    public_outputs::PublicOutputs
+};
+
 
 // =====================================
-// Policy Proof Circuit
-// Proves trade follows internal policy.
+// Private Inputs Struct
+// =====================================
+pub struct PrivateInputs {
+    amount: Field,
+    token_in: Field,
+    token_out: Field,
+    max_limit: Field,
+    nonce: Field,
+    pool_id_hash: Field,
+
+    intent_commitment: Field,    // Intent commitment (= leaf) representing "trade intent + limit"
+    policy_commitment: Field,    // Policy commitment (= leaf) representing "token pair + limit"
+
+    intent_merkle_proof_length: u32,
+    intent_merkle_proof_indices: [u1; 16],
+    intent_merkle_proof_siblings: [Field; 16],
+
+    policy_merkle_proof_length: u32,
+    policy_merkle_proof_indices: [u1; 16],
+    policy_merkle_proof_siblings: [Field; 16],
+
+    intent_secret: Field,        // stands for "intent witness"
+    policy_secret: Field,        // stands for "policy witness"
+    approver_secret: Field,      // stands for "signature witness"
+    nullifier_secret: Field,     // stands for "nullifier witness"
+}
+
+
+// =====================================
+// @title - Policy Proof Circuit
+// @notice - Proves trade follows internal policy.
 // =====================================
 fn main(
-    // -------------------------
+    private_inputs: PrivateInputs,
+    public_inputs: PublicInputs,
+) -> pub (PublicOutputs) {
+    // --------------------------
     // Private Inputs
-    // -------------------------
-    secret amount: Field,
-    secret token_in: Field,
-    secret token_out: Field,
-    secret max_limit: Field,
+    // --------------------------
+    let amount = private_inputs.amount;
+    let token_in = private_inputs.token_in;
+    let token_out = private_inputs.token_out;
+    let max_limit = private_inputs.max_limit;
+    let nonce = private_inputs.nonce;
+    let pool_id_hash = private_inputs.pool_id_hash;
 
-    secret policy_leaf: Field,          // leaf representing "token pair + limit"
-    secret policy_path_element: Field,  // simplified (placeholder)
-    secret approver_secret: Field,       // stands for "signature witness"
+    let intent_commitment = private_inputs.intent_commitment;
+    let policy_commitment = private_inputs.policy_commitment;
 
-    // -------------------------
+    let intent_merkle_proof_length = private_inputs.intent_merkle_proof_length;
+    let intent_merkle_proof_indices = private_inputs.intent_merkle_proof_indices;
+    let intent_merkle_proof_siblings = private_inputs.intent_merkle_proof_siblings;
+
+    let policy_merkle_proof_length = private_inputs.policy_merkle_proof_length;
+    let policy_merkle_proof_indices = private_inputs.policy_merkle_proof_indices;
+    let policy_merkle_proof_siblings = private_inputs.policy_merkle_proof_siblings;
+
+    let intent_secret = private_inputs.intent_secret;
+    let policy_secret = private_inputs.policy_secret;
+    let approver_secret = private_inputs.approver_secret;
+    let nullifier_secret = private_inputs.nullifier_secret;
+
+    // --------------------------
     // Public Inputs
-    // -------------------------
-    public intent_commitment: Field,
-    public policy_root: Field,
-    public nonce: Field,
-    public pool_id_hash: Field
-) {
-    // 1) Intent binding
-    let computed_commitment = hash4(amount, token_in, token_out, nonce);
-    computed_commitment.assert_equals(intent_commitment);
+    // --------------------------
+    let nullifier = public_inputs.nullifier;
+    let intent_merkle_root = public_inputs.intent_merkle_root;
+    let policy_merkle_root = public_inputs.policy_merkle_root;
 
-    // 2) Policy membership (simplified merkle check)
-    let computed_root = hash2(policy_leaf, policy_path_element);
-    computed_root.assert_equals(policy_root);
+    // --------------------------
+    // Circuit Logic
+    // --------------------------
+    // 1-1) Intent binding
+    let computed_intent_commitment = poseidon_hash_4([amount, token_in, token_out, intent_secret]);
+    assert(computed_intent_commitment == intent_commitment, "intent commitments don't match");
+
+    // 1-2) Check whether the intent commitment (leaf) is included in the intent merkle tree or not
+    let computed_intent_merkle_root = binary_merkle_root(
+        poseidon_hash_2,
+        intent_commitment,
+        intent_merkle_proof_length,
+        intent_merkle_proof_indices,
+        intent_merkle_proof_siblings,
+    );
+    assert(computed_intent_merkle_root == intent_merkle_root, "merkle roots don't match");
+
+    // 2-1) Policy membership (simplified merkle check)
+    let computed_policy_commitment = poseidon_hash_4([token_in, token_out, max_limit, policy_secret]);
+    assert(computed_policy_commitment == policy_commitment, "policy commitments don't match");
+
+    // 2-2) Check whether the policy commitment (= policy leaf) is included in the policy merkle tree or not
+    let computed_policy_merkle_root = binary_merkle_root(
+        poseidon_hash_2,
+        policy_commitment,
+        policy_merkle_proof_length,
+        policy_merkle_proof_indices,
+        policy_merkle_proof_siblings,
+    );
+    assert(computed_policy_merkle_root == policy_merkle_root, "policy merkle roots don't match");
 
     // 3) Enforce policy: amount <= max_limit
-    amount.assert_less_than_or_equal(max_limit);
+    assert(amount as u128 <= max_limit as u128);
 
     // 4) Approver authorization (simplified)
     // In practice this would be signature verification.
-    let auth = hash2(approver_secret, nonce);
-    auth.assert_not_equals(0);
+    let auth = poseidon_hash_2([nonce, approver_secret]);
+    assert(auth != 0);
 
     // 5) Bind proof to pool
-    pool_id_hash.assert_not_equals(0);
+    assert(pool_id_hash != 0);
+
+    // 6) Nullifier to prevent double approvals
+    let computed_nullifier = poseidon_hash_5([
+        intent_commitment, 
+        intent_merkle_root,
+        policy_commitment, 
+        policy_merkle_root, 
+        nullifier_secret
+    ]);
+    assert(computed_nullifier == nullifier, "nullifiers don't match");
+
+    // @dev - Return the public output 
+    let public_outputs = PublicOutputs {
+        intent_merkle_root,
+        policy_merkle_root,
+        nullifier
+    };
+    public_outputs
 }
-
-
-fn hash2(a: Field, b: Field) -> Field {
-    a + b * 131
-}
-
-fn hash4(a: Field, b: Field, c: Field, d: Field) -> Field {
-    a + b * 17 + c * 31 + d * 73
-}
-
-
-
-
-// fn main(x: u64, y: pub u64) {
-//     assert(x != y);
-// }
