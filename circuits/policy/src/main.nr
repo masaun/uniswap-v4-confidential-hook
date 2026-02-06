@@ -11,6 +11,9 @@ use types::{
     public_outputs::PublicOutputs
 };
 
+// @dev - The depth of the Merkle Tree for invoice commitments
+pub global MERKLE_TREE_DEPTH: u32 = 8;
+//pub global MERKLE_TREE_DEPTH: u32 = 16;
 
 // =====================================
 // Private Inputs Struct
@@ -27,12 +30,12 @@ pub struct PrivateInputs {
     policy_commitment: Field,    // Policy commitment (= leaf) representing "token pair + limit"
 
     intent_merkle_proof_length: u32,
-    intent_merkle_proof_indices: [u1; 16],
-    intent_merkle_proof_siblings: [Field; 16],
+    intent_merkle_proof_indices: [u1; MERKLE_TREE_DEPTH],
+    intent_merkle_proof_siblings: [Field; MERKLE_TREE_DEPTH],
 
     policy_merkle_proof_length: u32,
-    policy_merkle_proof_indices: [u1; 16],
-    policy_merkle_proof_siblings: [Field; 16],
+    policy_merkle_proof_indices: [u1; MERKLE_TREE_DEPTH],
+    policy_merkle_proof_siblings: [Field; MERKLE_TREE_DEPTH],
 
     nullifier: Field,            // Nullifier to prevent double approvals
 

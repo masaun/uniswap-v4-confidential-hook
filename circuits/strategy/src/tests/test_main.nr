@@ -10,6 +10,7 @@ use crate::{
         public_outputs::PublicOutputs
     },
     PrivateInputs,
+    MERKLE_TREE_DEPTH
 };
 
 
@@ -31,8 +32,8 @@ fn test_main_success() {
     let nonce = 0;
 
     let intent_merkle_proof_length = 0;
-    let intent_merkle_proof_indices = [0; 16];
-    let intent_merkle_proof_siblings = [0; 16];
+    let intent_merkle_proof_indices = [0; MERKLE_TREE_DEPTH];
+    let intent_merkle_proof_siblings = [0; MERKLE_TREE_DEPTH];
     let intent_secret = 999;
     let nullifier_secret = 666;
 
