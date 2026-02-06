@@ -4,7 +4,7 @@ mod types;
 
 use binary_merkle_root::binary_merkle_root;
 use libs::{
-    poseidon::poseidon_hash::{poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
+    poseidon::poseidon_hash::{poseidon_hash_1, poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
 };
 use types::{
     public_inputs::PublicInputs,
@@ -16,7 +16,7 @@ use types::{
 // Private Inputs Struct
 // =====================================
 pub struct PrivateInputs {
-    amount: Field,
+    amount: Field,    // amount_in for the trade
     token_in: Field,
     token_out: Field,
     max_limit: Field,
@@ -41,10 +41,10 @@ pub struct PrivateInputs {
 }
 
 
-// =====================================
+// =================================================
 // @title - Policy Proof Circuit
 // @notice - Proves trade follows internal policy.
-// =====================================
+// =================================================
 fn main(
     private_inputs: PrivateInputs,
     public_inputs: PublicInputs,
@@ -134,11 +134,14 @@ fn main(
     ]);
     assert(computed_nullifier == nullifier, "nullifiers don't match");
 
+    // 7) Compute nullifier hash to be stored on-chain
+    let nullifier_hash = poseidon_hash_1([nullifier]);
+
     // @dev - Return the public output 
     let public_outputs = PublicOutputs {
         intent_merkle_root,
         policy_merkle_root,
-        nullifier
+        nullifier_hash
     };
     public_outputs
 }

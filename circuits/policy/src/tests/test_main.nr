@@ -3,7 +3,7 @@ use binary_merkle_root::binary_merkle_root;
 use crate::{
     main,
     libs::{
-        poseidon::poseidon_hash::{poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
+        poseidon::poseidon_hash::{poseidon_hash_1, poseidon_hash_2, poseidon_hash_4, poseidon_hash_5},
     },
     types::{
         public_inputs::PublicInputs,
@@ -103,6 +103,11 @@ fn test_main_success() {
         policy_merkle_root,
         nullifier,
     };
+
+    //------------------------------------------------
+    // Compute expected nullifier hash
+    //-------------------------------------------------
+    let expected_nullifier_hash = poseidon_hash_1([nullifier]);
     
     //------------------------------------------------
     // Run the Circuit with Test Private/PublicInputs
@@ -117,5 +122,5 @@ fn test_main_success() {
     //-----------------------------
     assert(public_outputs.intent_merkle_root == public_inputs.intent_merkle_root, "Intent Merkle Roots don't match");
     assert(public_outputs.policy_merkle_root == public_inputs.policy_merkle_root, "Policy Merkle Roots don't match");
-    assert(public_outputs.nullifier == public_inputs.nullifier, "Nullifiers don't match");
+    assert(public_outputs.nullifier_hash == expected_nullifier_hash, "Nullifiers don't match");
 }
