@@ -96,7 +96,6 @@ contract UniswapV4ConfidentialHook is BaseHook {
         bytes32[] calldata strategyPublicInputs
     )
         internal
-        override
         returns (bytes4, BeforeSwapDelta, uint24)
     {
         // @dev - Verify ZK Confidential Hook Proofs
@@ -135,7 +134,6 @@ contract UniswapV4ConfidentialHook is BaseHook {
         bytes32[] calldata strategyPublicInputs
     )
         internal
-        override
         returns (bytes4)
     {
         // @dev - Verify ZK Confidential Hook Proofs
