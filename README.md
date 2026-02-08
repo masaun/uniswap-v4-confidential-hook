@@ -100,6 +100,7 @@ Enterprise      │ Private intent + identity │
 
 ## DEMO Video
 
+- DEMO of the `End-To-End` script using ./scripts/`e2e.ts`: https://www.loom.com/share/e0531eb349aa4662a9949e6a37a6d276
 
 <br>
 
