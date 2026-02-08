@@ -77,13 +77,24 @@ Enterprise      │ Private intent + identity │
 
 ## Deployed Contract Addresses (on `Unichain Sepolia`)
 
+### Newly deployed-contract addresses (on `Unichain Sepolia`) by this project
 | Contract | Address |
-|----------|---------||
-| **HonkVerifier** | [`0x786b31a1e67a9745f848dffb6c54a1d8accb8f1c`](https://unichain-sepolia.blockscout.com/address/0x786b31a1e67a9745f848dffb6c54a1d8accb8f1c) |
-| **ComplianceProofVerifier** | [`0x1aa877bfb71e7ec24224415a30e1e0345dc1d4c0`](https://unichain-sepolia.blockscout.com/address/0x1aa877bfb71e7ec24224415a30e1e0345dc1d4c0) |
-| **PolicyProofVerifier** | [`0x44b3ae18a72a44b17cd762c48f5206ad4f4a17c9`](https://unichain-sepolia.blockscout.com/address/0x44b3ae18a72a44b17cd762c48f5206ad4f4a17c9) |
-| **StrategyProofVerifier** | [`0x132db810d64cef15dda378b58069b2b3dadc434b`](https://unichain-sepolia.blockscout.com/address/0x132db810d64cef15dda378b58069b2b3dadc434b) |
-| **UniswapV4ConfidentialHook** | [`0xbb058974af8cc8a3606bfe952e234bd8a5e11858`](https://unichain-sepolia.blockscout.com/address/0xbb058974af8cc8a3606bfe952e234bd8a5e11858) |
+|----------|---------|
+| **HonkVerifier (of the `Compliance` ZK circuit)** | [`0x786B31a1E67a9745f848DFfb6C54a1d8aCCB8F1c`](https://sepolia.uniscan.xyz/address/0x786B31a1E67a9745f848DFfb6C54a1d8aCCB8F1c) |
+| **HonkVerifier (of the `Policy` ZK circuit)** | [`0x44B3ae18A72A44b17CD762C48f5206AD4F4A17C9`](https://sepolia.uniscan.xyz/address/0x44B3ae18A72A44b17CD762C48f5206AD4F4A17C9) |
+| **HonkVerifier (of the `Strategy` ZK circuit)** | [`0xBb058974aF8cC8A3606bFE952e234Bd8a5E11858`](https://sepolia.uniscan.xyz/address/0xBb058974aF8cC8A3606bFE952e234Bd8a5E11858) |
+| **ComplianceProofVerifier** | [`0x1aA877Bfb71e7eC24224415a30E1E0345Dc1d4C0`](https://sepolia.uniscan.xyz/address/0x1aA877Bfb71e7eC24224415a30E1E0345Dc1d4C0) |
+| **PolicyProofVerifier** | [`0x132DB810D64ceF15dDA378b58069B2B3daDC434B`](https://sepolia.uniscan.xyz/address/0x132DB810D64ceF15dDA378b58069B2B3daDC434B) |
+| **StrategyProofVerifier** | [`0x98165b549582844227f1CB08375bDf099A991406`](https://sepolia.uniscan.xyz/address/0x98165b549582844227f1CB08375bDf099A991406) |
+| **UniswapV4ConfidentialHook** | [`0x05f2ba624e4121Ac8D5416f7a33291A010588880`](https://sepolia.uniscan.xyz/address/0x05f2ba624e4121Ac8D5416f7a33291A010588880) |
+
+
+### Existing deployed-contract addresses (on `Unichain Sepolia`)
+| Contract | Address |
+|----------|---------|
+| **PoolManager** | [`0xC81462Fec8B23319F288047f8A03A57682a35C1A`](https://sepolia.uniscan.xyz/address/0xC81462Fec8B23319F288047f8A03A57682a35C1A) |
+| **USDC** | [`0x31d0220469e10c4e71834a79b1f276d740d3768f`](https://sepolia.uniscan.xyz/address/0x31d0220469e10c4e71834a79b1f276d740d3768f) |
+| **WETH** | [`0x4200000000000000000000000000000000000006`](https://sepolia.uniscan.xyz/address/0x4200000000000000000000000000000000000006) |
 
 <br>
 
@@ -179,6 +190,8 @@ bun run e2e
 
 - Unichain
   - Fancet: https://docs.unichain.org/docs/tools/faucets
+  - `WETH`: You can convert your Narive ETH to the WETH by calling the `deposit()` in the Block Explorer: https://unichain-sepolia.blockscout.com/address/0x4200000000000000000000000000000000000006?tab=read_write_contract
+  - `USDC`: https://faucet.circle.com/
 
 - Uniswap v4
   - [Uniswap v4 docs](https://docs.uniswap.org/contracts/v4/overview)
