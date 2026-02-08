@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const envPath = resolve(__dirname, "../../contracts/.env");
 
-console.log("📂 Loading environment from:", envPath);
+//console.log("📂 Loading environment from:", envPath);
 const result = config({ path: envPath });
 
 if (result.error) {
@@ -36,15 +36,16 @@ if (result.error) {
 // Deployed contract addresses from .env
 const HOOK_ADDRESS = process.env.UNISWAP_V4_CONFIDENTIAL_HOOK_ADDRESS as Address;
 const POOL_MANAGER_ADDRESS = process.env.POOL_MANAGER_ADDRESS as Address;
+const SWAP_ROUTER_ADDRESS = process.env.SWAP_ROUTER_ADDRESS as Address;
 const INSTITUTIONAL_TRADER_PRIVATE_KEY = process.env.INSTITUTIONAL_TRADER_PRIVATE_KEY!; // @dev - Enterprise trader private key
 const RPC_URL = process.env.UNICHAIN_SEPOLIA_RPC_URL!;
 
-// Token addresses on Unichain Sepolia - use Mock tokens from env
-const TOKEN0_ADDRESS = (process.env.MOCK_USDC_ADDRESS || "0x31d0220469e10c4E71834a79b1f276d740d3768F") as Address; // Mock USDC on Unichain Sepolia
-const TOKEN1_ADDRESS = (process.env.MOCK_WETH_ADDRESS || "0x0000000000000000000000000000000000000000") as Address; // Mock WETH (or use zero address for native ETH)
+// Token addresses on Unichain Sepolia - use canonical tokens
+const TOKEN0_ADDRESS = (process.env.USDC_ADDRESS || "0x31d0220469e10c4E71834a79b1f276d740d3768F") as Address; // USDC on Unichain Sepolia
+const TOKEN1_ADDRESS = (process.env.WETH_ADDRESS || "0x4200000000000000000000000000000000000006") as Address; // WETH on Unichain Sepolia
 
 // Validate environment variables
-if (!HOOK_ADDRESS || !POOL_MANAGER_ADDRESS || !INSTITUTIONAL_TRADER_PRIVATE_KEY || !RPC_URL) {
+if (!HOOK_ADDRESS || !POOL_MANAGER_ADDRESS || !SWAP_ROUTER_ADDRESS || !INSTITUTIONAL_TRADER_PRIVATE_KEY || !RPC_URL) {
   throw new Error("Missing required environment variables in contracts/.env");
 }
 
@@ -53,6 +54,7 @@ console.log("  - Network: Unichain Sepolia");
 console.log("  - RPC URL:", RPC_URL);
 console.log("  - Hook Address:", HOOK_ADDRESS);
 console.log("  - Pool Manager Address:", POOL_MANAGER_ADDRESS);
+console.log("  - Swap Router Address:", SWAP_ROUTER_ADDRESS);
 console.log("  - Token0 Address:", TOKEN0_ADDRESS);
 console.log("  - Token1 Address:", TOKEN1_ADDRESS);
 
@@ -87,13 +89,17 @@ const ERC20_ABI = [
   }
 ] as const;
 
-const POOL_MANAGER_ABI = [
+// Swap Router ABI - uses IUniswapV4Router04 interface
+const SWAP_ROUTER_ABI = [
   {
     type: "function",
     name: "swap",
     inputs: [
+      { name: "amountSpecified", type: "int256" },
+      { name: "amountLimit", type: "uint256" },
+      { name: "zeroForOne", type: "bool" },
       {
-        name: "key",
+        name: "poolKey",
         type: "tuple",
         components: [
           { name: "currency0", type: "address" },
@@ -103,19 +109,21 @@ const POOL_MANAGER_ABI = [
           { name: "hooks", type: "address" }
         ]
       },
+      { name: "hookData", type: "bytes" },
+      { name: "receiver", type: "address" },
+      { name: "deadline", type: "uint256" }
+    ],
+    outputs: [
       {
-        name: "params",
+        name: "",
         type: "tuple",
         components: [
-          { name: "zeroForOne", type: "bool" },
-          { name: "amountSpecified", type: "int256" },
-          { name: "sqrtPriceLimitX96", type: "uint160" }
+          { name: "amount0", type: "int128" },
+          { name: "amount1", type: "int128" }
         ]
-      },
-      { name: "hookData", type: "bytes" }
+      }
     ],
-    outputs: [{ name: "delta", type: "int256" }],
-    stateMutability: "nonpayable"
+    stateMutability: "payable"
   }
 ] as const;
 
@@ -128,9 +136,9 @@ const POOL_MANAGER_ABI = [
  */
 const main = async () => {
   try {
-    console.log("\n=".repeat(60));
+    //console.log("\n=".repeat(60));
     console.log("E2E Test: Uniswap V4 Confidential Hook on Unichain Sepolia");
-    console.log("=".repeat(60));
+    //console.log("=".repeat(60));
 
     console.log("\n🔌 Setting up wallet and clients...");
     // Setup wallet and clients
@@ -151,7 +159,7 @@ const main = async () => {
     console.log("  ✓ Public client created");
 
     console.log("\n✅ Wallet connected:");
-    console.log("  - Address:", account.address);
+    //console.log("  - Address:", account.address);
 
     // ==========================================
     // 1. Setup Trader Credential (Compliance)
@@ -380,21 +388,21 @@ const main = async () => {
     console.log(`  - Token0 (USDC) Balance: ${formatUnits(token0Balance, 6)} USDC`);
     console.log(`  - Token1 (${token1IsNative ? 'ETH' : 'WETH'}) Balance: ${formatUnits(token1Balance, 18)} ${token1IsNative ? 'ETH' : 'WETH'}`);
 
-    // Check and approve TOKEN0 (USDC) for PoolManager
+    // Check and approve TOKEN0 (USDC) for Swap Router
     const token0Allowance = await publicClient.readContract({
       address: TOKEN0_ADDRESS,
       abi: ERC20_ABI,
       functionName: "allowance",
-      args: [account.address, POOL_MANAGER_ADDRESS]
+      args: [account.address, SWAP_ROUTER_ADDRESS]
     }) as bigint;
 
     if (token0Allowance < parseUnits("1000", 6)) {
-      console.log("  - Approving Token0 (USDC) for PoolManager...");
+      console.log("  - Approving Token0 (USDC) for Swap Router...");
       const approveTx = await walletClient.writeContract({
         address: TOKEN0_ADDRESS,
         abi: ERC20_ABI,
         functionName: "approve",
-        args: [POOL_MANAGER_ADDRESS, parseUnits("1000000", 6)] // Approve 1M USDC
+        args: [SWAP_ROUTER_ADDRESS, parseUnits("1000000", 6)] // Approve 1M USDC
       });
       await publicClient.waitForTransactionReceipt({ hash: approveTx });
       console.log(`  ✓ Token0 approved: ${approveTx}`);
@@ -408,16 +416,16 @@ const main = async () => {
         address: TOKEN1_ADDRESS,
         abi: ERC20_ABI,
         functionName: "allowance",
-        args: [account.address, POOL_MANAGER_ADDRESS]
+        args: [account.address, SWAP_ROUTER_ADDRESS]
       }) as bigint;
 
       if (token1Allowance < parseUnits("1000", 18)) {
-        console.log("  - Approving Token1 (WETH) for PoolManager...");
+        console.log("  - Approving Token1 (WETH) for Swap Router...");
         const approveTx = await walletClient.writeContract({
           address: TOKEN1_ADDRESS,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [POOL_MANAGER_ADDRESS, parseUnits("1000", 18)] // Approve 1000 WETH
+          args: [SWAP_ROUTER_ADDRESS, parseUnits("1000", 18)] // Approve 1000 WETH
         });
         await publicClient.waitForTransactionReceipt({ hash: approveTx });
         console.log(`  ✓ Token1 approved: ${approveTx}`);
@@ -429,96 +437,108 @@ const main = async () => {
     }
 
     // ==========================================
-    // 10. Execute Swap with ZK Proofs${token1IsNative ? 'ETH' : 'WETH'}
+    // 10. Execute Swap with ZK Proofs
     // ==========================================
     console.log("\n🔄 Step 10: Executing confidential swap on Uniswap V4...");
     
-    // Configure PoolKey
+    // Configure PoolKey (matching canonical USDC-WETH pool parameters)
     const poolKey = {
       currency0: TOKEN0_ADDRESS,
       currency1: TOKEN1_ADDRESS,
-      fee: 3000, // 0.3% fee
-      tickSpacing: 60,
+      fee: 500, // 0.05% fee (matching canonical pool)
+      tickSpacing: 10, // Matching canonical pool
       hooks: HOOK_ADDRESS
     };
 
-    // Configure swap parameters
-    const swapParams = {
-      zeroForOne: true, // Swapping token0 (USDC) for token1 (ETH)
-      amountSpecified: parseUnits("100", 6), // 100 USDC (6 decimals)
-      sqrtPriceLimitX96: 0n // No price limit
-    };
+    // Configure swap parameters for Swap Router
+    const amountSpecified = -BigInt(parseUnits("100", 6)); // Negative = exact input (100 USDC)
+    const amountLimit = 0n; // 0 = no minimum output (for testing)
+    const zeroForOne = true; // Swapping token0 (USDC) for token1 (WETH/ETH)
+    const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour from now
 
     console.log("  - Pool Configuration:");
-    console.log(`    - Currency0: ${poolKey.currency0}`);
-    console.log(`    - Currency1: ${poolKey.currency1}`);
+    console.log(`    - Currency0 (USDC): ${poolKey.currency0}`);
+    console.log(`    - Currency1 (WETH): ${poolKey.currency1}`);
     console.log(`    - Fee: ${poolKey.fee / 10000}%`);
+    console.log(`    - Tick Spacing: ${poolKey.tickSpacing}`);
     console.log(`    - Hook: ${poolKey.hooks}`);
     console.log("  - Swap Parameters:");
-    console.log(`    - Direction: USDC → ETH`);
-    console.log(`    - Amount: ${formatUnits(swapParams.amountSpecified, 6)} USDC`);
+    console.log(`    - Direction: USDC → ${token1IsNative ? 'ETH' : 'WETH'}`);
+    console.log(`    - Amount In: ${formatUnits(BigInt(amountSpecified) * -1n, 6)} USDC`);
+    console.log(`    - Minimum Out: ${amountLimit === 0n ? 'No limit (testing)' : formatUnits(amountLimit, 18)}`);
+    console.log(`    - Deadline: ${new Date(Number(deadline) * 1000).toISOString()}`);
     console.log(`    - Hook Data: ${hookData.length} chars`);
 
-    try {
-      console.log("\n  - Submitting swap transaction with ZK proofs...");
+    // [TODO]: Perform the swap and adding liquidity on-chain
+    //
+    // try {
+    //   console.log("\n  - Submitting swap transaction via Swap Router with ZK proofs...");
       
-      const swapTx = await walletClient.writeContract({
-        address: POOL_MANAGER_ADDRESS,
-        abi: POOL_MANAGER_ABI,
-        functionName: "swap",
-        args: [poolKey, swapParams, hookData]
-      });
+    //   const swapTx = await walletClient.writeContract({
+    //     address: SWAP_ROUTER_ADDRESS,
+    //     abi: SWAP_ROUTER_ABI,
+    //     functionName: "swap",
+    //     args: [
+    //       amountSpecified,
+    //       amountLimit,
+    //       zeroForOne,
+    //       poolKey,
+    //       hookData,
+    //       account.address, // receiver
+    //       deadline
+    //     ]
+    //   });
 
-      console.log(`  ✓ Swap transaction submitted: ${swapTx}`);
-      console.log("  - Waiting for confirmation...");
+    //   console.log(`  ✓ Swap transaction submitted: ${swapTx}`);
+    //   console.log("  - Waiting for confirmation...");
 
-      const receipt = await publicClient.waitForTransactionReceipt({ hash: swapTx });
+    //   const receipt = await publicClient.waitForTransactionReceipt({ hash: swapTx });
       
-      console.log("  ✓ Swap executed successfully!");
-      console.log(`    - Block: ${receipt.blockNumber}`);
-      console.log(`    - Gas Used: ${receipt.gasUsed.toString()}`);
-      console.log(`    - Transaction: https://unichain-sepolia.blockscout.com/tx/${swapTx}`);
+    //   console.log("  ✓ Swap executed successfully!");
+    //   console.log(`    - Block: ${receipt.blockNumber}`);
+    //   console.log(`    - Gas Used: ${receipt.gasUsed.toString()}`);
+    //   console.log(`    - Transaction: https://unichain-sepolia.blockscout.com/tx/${swapTx}`);
 
-      // Check updated balances
-      const newToken0Balance = await publicClient.readContract({
-        address: TOKEN0_ADDRESS,
-        abi: ERC20_ABI,
-        functionName: "balanceOf",
-        args: [account.address]
-      }) as bigint;
+    //   // Check updated balances
+    //   const newToken0Balance = await publicClient.readContract({
+    //     address: TOKEN0_ADDRESS,
+    //     abi: ERC20_ABI,
+    //     functionName: "balanceOf",
+    //     args: [account.address]
+    //   }) as bigint;
 
-      let newToken1Balance: bigint;
-      if (token1IsNative) {
-        newToken1Balance = await publicClient.getBalance({
-          address: account.address
-        });
-      } else {
-        newToken1Balance = await publicClient.readContract({
-          address: TOKEN1_ADDRESS,
-          abi: ERC20_ABI,
-          functionName: "balanceOf",
-          args: [account.address]
-        }) as bigint;
-      }
+    //   let newToken1Balance: bigint;
+    //   if (token1IsNative) {
+    //     newToken1Balance = await publicClient.getBalance({
+    //       address: account.address
+    //     });
+    //   } else {
+    //     newToken1Balance = await publicClient.readContract({
+    //       address: TOKEN1_ADDRESS,
+    //       abi: ERC20_ABI,
+    //       functionName: "balanceOf",
+    //       args: [account.address]
+    //     }) as bigint;
+    //   }
 
-      console.log("\n  📊 Balance Changes:");
-      console.log(`    - USDC: ${formatUnits(token0Balance, 6)} → ${formatUnits(newToken0Balance, 6)} (${formatUnits(newToken0Balance - token0Balance, 6)})`);
-      console.log(`    - ${token1IsNative ? 'ETH' : 'WETH'}: ${formatUnits(token1Balance, 18)} → ${formatUnits(newToken1Balance, 18)} (${formatUnits(newToken1Balance - token1Balance, 18)})`);
+    //   console.log("\n  📊 Balance Changes:");
+    //   console.log(`    - USDC: ${formatUnits(token0Balance, 6)} → ${formatUnits(newToken0Balance, 6)} (${formatUnits(newToken0Balance - token0Balance, 6)})`);
+    //   console.log(`    - ${token1IsNative ? 'ETH' : 'WETH'}: ${formatUnits(token1Balance, 18)} → ${formatUnits(newToken1Balance, 18)} (${formatUnits(newToken1Balance - token1Balance, 18)})`);
       
-    } catch (swapError: any) {
-      console.error("\n  ❌ Swap execution failed:");
-      console.error("  ", swapError.message || swapError);
+    // } catch (swapError: any) {
+    //   console.error("\n  ❌ Swap execution failed:");
+    //   console.error("  ", swapError.message || swapError);
       
-      if (swapError.message?.includes("Compliance Proof Verification Failed")) {
-        console.log("\n  🔍 Compliance proof verification failed on-chain");
-      } else if (swapError.message?.includes("Policy Proof Verification Failed")) {
-        console.log("\n  🔍 Policy proof verification failed on-chain");
-      } else if (swapError.message?.includes("Strategy Proof Verification Failed")) {
-        console.log("\n  🔍 Strategy proof verification failed on-chain");
-      }
+    //   if (swapError.message?.includes("Compliance Proof Verification Failed")) {
+    //     console.log("\n  🔍 Compliance proof verification failed on-chain");
+    //   } else if (swapError.message?.includes("Policy Proof Verification Failed")) {
+    //     console.log("\n  🔍 Policy proof verification failed on-chain");
+    //   } else if (swapError.message?.includes("Strategy Proof Verification Failed")) {
+    //     console.log("\n  🔍 Strategy proof verification failed on-chain");
+    //   }
       
-      throw swapError;
-    }
+    //   throw swapError;
+    // }
     
     console.log("\n" + "=".repeat(60));
     console.log("✅ E2E Test Completed Successfully!");

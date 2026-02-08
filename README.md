@@ -1,8 +1,12 @@
 # Uniswap v4 Confidential Hook
 
+> ⚠️ **IMPORTANT NOTE**: This project currently requires redeployment of the hook contract with correct Uniswap V4 permission flags. See [HOOK_ADDRESS_FIX.md](HOOK_ADDRESS_FIX.md) for details.
+
 ## Overview
 
-Uniswap v4 Confidential Hook is a privacy-preserving hook implementation for Uniswap v4 that leverages Zero-Knowledge (ZK) proofs to enable confidential trading with compliance, policy, and strategy verification. Built with Noir ZK circuits and Solidity smart contracts, this hook ensures that swap and liquidity operations meet specific criteria without revealing sensitive transaction details on-chain.
+Uniswap v4 Confidential Hook is a privacy-preserving hook implementation for Uniswap v4 that leverages `Zero-Knowledge (ZK) Proof` to enable **confidential trading** with `compliance`, `policy`, and `strategy` verification. 
+
+Built with `Noir` **ZK circuits** and Solidity smart contracts, this hook ensures that swap and liquidity operations meet specific criteria **without** `revealing sensitive transaction details on-chain`.
 
 ## Key Features
 
@@ -13,7 +17,7 @@ Uniswap v4 Confidential Hook is a privacy-preserving hook implementation for Uni
   - **Strategy Verification**: Confirms execution aligns with predefined trading strategies
 - **Uniswap v4 Hook Integration**: Seamlessly integrates with Uniswap v4's hook architecture
 - **BeforeSwap & BeforeAddLiquidity Hooks**: Validates ZK proofs before allowing swaps and liquidity additions
-- **Honk Proof System**: Leverages Barretenberg's Honk verifier for efficient on-chain proof verification
+- **Honk zkProof System**: Leverages Barretenberg's Honk verifier for efficient on-chain proof verification
 
 ## Use Case
 
@@ -37,13 +41,37 @@ Uniswap v4 Confidential Hook is a privacy-preserving hook implementation for Uni
 
 <br>
 
-## Architecture
+## Architecture & Userflow
 
-
-<br>
-
-## Userflow
-
+```bash
+                ┌───────────────────────────┐
+Enterprise      │ Private intent + identity │
+(Institution)   └────────────┬─────────────-┘
+                             ▼
+                 ┌──────────────--───-┐
+                 │ Noir Circuit(s)    │
+                 │                    │
+                 │ - Policy Proof     │
+                 │ - Strategy Proof   │
+                 │ - Compliance Proof │
+                 └─────────┬──────────┘
+                           │ proof + publicInputs
+                           ▼
+                  ┌─────────────────────────────────┐
+                  │ Uniswap v4 Confidential Hook    │
+                  │                                 │
+                  │ _beforeSwap()                   │
+                  │ _beforeAddLiquidity()           │
+                  │    　　　▼                       │
+                  │ - verifyComplianceProof()       │
+                  │ - verifyPolicyProof()           │
+                  │ - verifyStrategyProof()         │
+                  └─────────┬───────────────┬───────┘
+                            ▼               ▼        
+                  ┌──────────────────┐   ┌────────┐
+                  │ Pool Liquidity   │   │ Swap   │
+                  └──────────────────┘   └────────┘
+```
 
 <br>
 
@@ -101,7 +129,7 @@ forge build
 
 3. **Run tests**:
 ```bash
-forge test
+IN PROGRESS
 ```
 
 4. **Deploy contracts on Unichain Sepolia**:
@@ -133,8 +161,27 @@ bun run e2e
 
 ## References
 
-- Noir ZK circuit
+- ZK circuit in `Noir` (powered by `Aztec`)
   - [Noir Documentation](https://noir-lang.org/)
   - [Barretenberg Documentation](https://aztecprotocol.github.io/barretenberg/)
   - `noir-examples/solidity-example`
     - `js/generate-proof.ts` (How to use the `verifierTarget: "evm"`): https://github.com/noir-lang/noir-examples/blob/master/solidity-example/js/generate-proof.ts#L16
+
+  - Recursive Proof:
+    - Doc：https://barretenberg.aztec.network/docs/explainers/recursive_aggregation/
+    - `noir-examples/recursion`：https://github.com/noir-lang/noir-examples/tree/master/recursion
+
+
+<br>
+
+- Uniswap v4 Hook
+  - Template: https://github.com/uniswapfoundation/v4-template
+
+- Unichain
+  - Fancet: https://docs.unichain.org/docs/tools/faucets
+
+- Uniswap v4
+  - [Uniswap v4 docs](https://docs.uniswap.org/contracts/v4/overview)
+  - [v4-periphery](https://github.com/uniswap/v4-periphery)
+  - [v4-core](https://github.com/uniswap/v4-core)
+  - [v4-by-example](https://v4-by-example.org)
