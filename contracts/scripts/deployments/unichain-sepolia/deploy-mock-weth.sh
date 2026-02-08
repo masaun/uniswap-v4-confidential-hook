@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Deploy and verify MockUSDC on Unichain Sepolia
-# Usage: ./deploy-mock-usdc.sh [--verify-only] [mock_usdc_address]
+# Deploy and verify MockWETH on Unichain Sepolia
+# Usage: ./deploy-mock-weth.sh [--verify-only] [mock_weth_address]
 
 set -e
 
@@ -18,7 +18,7 @@ if [ "$1" = "--verify-only" ]; then
     shift
 fi
 
-MOCK_USDC_ADDRESS=$1
+MOCK_WETH_ADDRESS=$1
 
 # Get the contracts root directory (3 levels up from this script)
 CONTRACTS_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
@@ -40,7 +40,7 @@ if [ "$VERIFY_ONLY" = true ]; then
     # VERIFICATION ONLY MODE
     # ============================================
     echo -e "${GREEN}====================================${NC}"
-    echo -e "${GREEN}Verifying MockUSDC on Unichain Sepolia${NC}"
+    echo -e "${GREEN}Verifying MockWETH on Unichain Sepolia${NC}"
     echo -e "${GREEN}====================================${NC}"
     echo ""
 
@@ -52,26 +52,26 @@ if [ "$VERIFY_ONLY" = true ]; then
     fi
 
     # Get address from argument, env, or user input
-    if [ -z "$MOCK_USDC_ADDRESS" ]; then
+    if [ -z "$MOCK_WETH_ADDRESS" ]; then
         # No argument provided, try to use env variable
-        if [ -n "$MOCK_USDC_ADDRESS" ] && [ "$MOCK_USDC_ADDRESS" != "0x0000000000000000000000000000000000000000" ]; then
-            MOCK_USDC_ADDRESS="$MOCK_USDC_ADDRESS"
+        if [ -n "$MOCK_WETH_ADDRESS" ] && [ "$MOCK_WETH_ADDRESS" != "0x0000000000000000000000000000000000000000" ]; then
+            MOCK_WETH_ADDRESS="$MOCK_WETH_ADDRESS"
         else
             # Prompt user for address
-            echo -e "${YELLOW}Enter MockUSDC contract address:${NC}"
-            read MOCK_USDC_ADDRESS
+            echo -e "${YELLOW}Enter MockWETH contract address:${NC}"
+            read MOCK_WETH_ADDRESS
         fi
     fi
 
     echo ""
-    echo -e "${YELLOW}Verifying MockUSDC at $MOCK_USDC_ADDRESS...${NC}"
+    echo -e "${YELLOW}Verifying MockWETH at $MOCK_WETH_ADDRESS...${NC}"
     forge verify-contract \
       --rpc-url unichain_sepolia \
       --verifier blockscout \
       --verifier-url https://unichain-sepolia.blockscout.com/api/ \
-      "$MOCK_USDC_ADDRESS" \
-      src/mocks/MockUSDC.sol:MockUSDC \
-      || echo -e "${YELLOW}MockUSDC verification failed or already verified${NC}"
+      "$MOCK_WETH_ADDRESS" \
+      src/mocks/MockWETH.sol:MockWETH \
+      || echo -e "${YELLOW}MockWETH verification failed or already verified${NC}"
 
     echo ""
     echo -e "${GREEN}====================================${NC}"
@@ -79,14 +79,14 @@ if [ "$VERIFY_ONLY" = true ]; then
     echo -e "${GREEN}====================================${NC}"
     echo ""
     echo "Check contract on Blockscout:"
-    echo "https://unichain-sepolia.blockscout.com/address/$MOCK_USDC_ADDRESS"
+    echo "https://unichain-sepolia.blockscout.com/address/$MOCK_WETH_ADDRESS"
 
 else
     # ============================================
     # DEPLOYMENT MODE
     # ============================================
     echo -e "${GREEN}====================================${NC}"
-    echo -e "${GREEN}Deploying MockUSDC to Unichain Sepolia${NC}"
+    echo -e "${GREEN}Deploying MockWETH to Unichain Sepolia${NC}"
     echo -e "${GREEN}====================================${NC}"
     echo ""
 
@@ -105,19 +105,19 @@ else
     forge build
 
     echo ""
-    echo -e "${YELLOW}Deploying MockUSDC...${NC}"
+    echo -e "${YELLOW}Deploying MockWETH...${NC}"
 
-    forge script scripts/deployments/unichain-sepolia/DeployMockUSDC.s.sol:DeployMockUSDC \
+    forge script scripts/deployments/unichain-sepolia/DeployMockWETH.s.sol:DeployMockWETH \
       --rpc-url unichain_sepolia \
       --broadcast
 
     echo ""
     echo -e "${GREEN}====================================${NC}"
-    echo -e "${GREEN}MockUSDC Deployment Complete!${NC}"
+    echo -e "${GREEN}MockWETH Deployment Complete!${NC}"
     echo -e "${GREEN}====================================${NC}"
     echo ""
     echo -e "${YELLOW}Next steps:${NC}"
-    echo "1. Copy the MockUSDC address from the output above"
-    echo "2. Add to .env: MOCK_USDC_ADDRESS=<address>"
+    echo "1. Copy the MockWETH address from the output above"
+    echo "2. Add to .env: MOCK_WETH_ADDRESS=<address>"
     echo "3. Run mint script to mint tokens"
 fi

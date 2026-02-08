@@ -6,7 +6,7 @@ import {HookMiner} from "@uniswap/v4-periphery/src/utils/HookMiner.sol";
 
 import {BaseScript} from "./base/BaseScript.sol";
 
-import {Counter} from "../src/Counter.sol";
+import {Counter} from "../../src/Counter.sol";
 
 /// @notice Mines the address and deploys the Counter.sol Hook contract
 contract DeployHookScript is BaseScript {

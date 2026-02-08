@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Mint MockUSDC tokens on Unichain Sepolia
-# Usage: ./mint-mock-usdc.sh [amount_in_usdc] [recipient_address]
-#   Example: ./mint-mock-usdc.sh 1000000  (mints 1 million USDC to your address)
-#   Example: ./mint-mock-usdc.sh 1000000 <Your wallet address>  (mints to specific address)
+# Mint MockWETH tokens on Unichain Sepolia
+# Usage: ./mint-mock-weth.sh [amount_in_weth] [recipient_address]
+#   Example: ./mint-mock-weth.sh 10000  (mints 10,000 WETH to your address)
+#   Example: ./mint-mock-weth.sh 10000 <Your wallet address> (mints to specific address)
 
 set -e
 
@@ -19,7 +19,7 @@ CONTRACTS_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 # Check .env
 if [ ! -f "$CONTRACTS_ROOT/.env" ]; then
     echo -e "${RED}Error: .env file not found at $CONTRACTS_ROOT/.env${NC}"
-    echo "Please create a .env file with MOCK_USDC_ADDRESS set"
+    echo "Please create a .env file with MOCK_WETH_ADDRESS set"
     exit 1
 fi
 
@@ -36,20 +36,20 @@ if [ -z "$UNICHAIN_SEPOLIA_RPC_URL" ]; then
     exit 1
 fi
 
-if [ -z "$MOCK_USDC_ADDRESS" ] || [ "$MOCK_USDC_ADDRESS" = "0x0000000000000000000000000000000000000000" ]; then
-    echo -e "${RED}Error: MOCK_USDC_ADDRESS not set in .env${NC}"
-    echo "Please deploy MockUSDC first using ./deploy-mock-usdc.sh"
+if [ -z "$MOCK_WETH_ADDRESS" ] || [ "$MOCK_WETH_ADDRESS" = "0x0000000000000000000000000000000000000000" ]; then
+    echo -e "${RED}Error: MOCK_WETH_ADDRESS not set in .env${NC}"
+    echo "Please deploy MockWETH first using ./deploy-mock-weth.sh"
     exit 1
 fi
 
 # Parse amount argument (optional)
 if [ -n "$1" ]; then
-    # Convert to amount with 6 decimals
-    MINT_AMOUNT=$(echo "$1 * 1000000" | bc)
+    # Convert to amount with 18 decimals
+    MINT_AMOUNT=$(echo "$1 * 10^18" | bc)
     export MINT_AMOUNT
-    echo -e "${YELLOW}Custom mint amount: $1 USDC${NC}"
+    echo -e "${YELLOW}Custom mint amount: $1 WETH${NC}"
 else
-    echo -e "${YELLOW}Using default mint amount: 1,000,000 USDC${NC}"
+    echo -e "${YELLOW}Using default mint amount: 10,000 WETH${NC}"
 fi
 
 # Parse recipient address argument (optional)
@@ -62,24 +62,22 @@ fi
 cd "$CONTRACTS_ROOT"
 
 echo -e "${GREEN}====================================${NC}"
-echo -e "${GREEN}Minting MockUSDC on Unichain Sepolia${NC}"
+echo -e "${GREEN}Minting MockWETH on Unichain Sepolia${NC}"
 echo -e "${GREEN}====================================${NC}"
 echo ""
-echo "MockUSDC Address: $MOCK_USDC_ADDRESS"
+echo -e "${YELLOW}MockWETH Address: $MOCK_WETH_ADDRESS${NC}"
 echo "Amount: $MINT_AMOUNT (with decimals)"
 echo "Recipient: ${MINT_RECIPIENT:-Deployer}"
 echo ""
 
-# Run the mint script
-forge script scripts/mock-USDC-minter/MintMockUSDC.s.sol:MintMockUSDC \
+forge script scripts/mock-WETH-minter/MintMockWETH.s.sol:MintMockWETH \
   --rpc-url "$UNICHAIN_SEPOLIA_RPC_URL" \
-  --broadcast \
-  -vvv
+  --broadcast
 
 echo ""
 echo -e "${GREEN}====================================${NC}"
 echo -e "${GREEN}Minting Complete!${NC}"
 echo -e "${GREEN}====================================${NC}"
 echo ""
-echo "View transaction on Uniscan:"
-echo "https://sepolia.uniscan.xyz/address/$MOCK_USDC_ADDRESS"
+echo "Check your balance on Blockscout:"
+echo "https://unichain-sepolia.blockscout.com/token/$MOCK_WETH_ADDRESS"
