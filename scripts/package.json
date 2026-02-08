@@ -1,0 +1,26 @@
+{
+  "name": "uniswap-v4-confidential-hook",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "scripts": {
+    "generate-proof": "bun run ./unit/generate-proof.ts",
+    "e2e": "bun run ./e2e/e2e.ts"
+  },
+  "dependencies": {
+    "@aztec/bb.js": "3.0.0-devnet.6-patch.1",
+    "@iexec/dataprotector": "^2.0.0-beta.23",
+    "@noir-lang/noir_js": "^1.0.0-beta.18",
+    "@zk-kit/imt": "^2.0.0-beta.8",
+    "poseidon-lite": "^0.3.0",
+    "viem": "^2.21.54",
+    "dotenv": "^16.4.7"
+  }
+}

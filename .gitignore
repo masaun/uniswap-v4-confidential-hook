@@ -30,6 +30,9 @@ docs/
 
 # Node modules
 node_modules/
+bun.lockb
+package-lock.json
+yarn.lock
 
 # Other files
 .DS_Store
