@@ -7,7 +7,16 @@ libs = ["lib"]
 out = "out"
 solc_version = "0.8.30"
 src = "src"
+test = "test"
+script = "scripts"
+
+# optimizer_runs was originally 200, but to avoid the "Error: HonkVerifier: is above the contract size limit (24639 > 24576)", we set it to 100.
+optimizer = true
+optimizer_runs = 100  # Originally, this was 200. However, to avoid the "Error: HonkVerifier: is above the contract size limit (24639 > 24576)", we set it to 100.
 via_ir = false
+
+ignored_error_codes = [5574]
+deny_warnings = false
 
 [lint]
 exclude_lints = ["screaming-snake-case-immutable", "screaming-snake-case-const"]
