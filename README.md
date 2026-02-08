@@ -1,7 +1,5 @@
 # Uniswap v4 Confidential Hook
 
-> ⚠️ **IMPORTANT NOTE**: This project currently requires redeployment of the hook contract with correct Uniswap V4 permission flags. See [HOOK_ADDRESS_FIX.md](HOOK_ADDRESS_FIX.md) for details.
-
 ## Overview
 
 Uniswap v4 Confidential Hook is a privacy-preserving hook implementation for Uniswap v4 that leverages `Zero-Knowledge (ZK) Proof` to enable **confidential trading** with `compliance`, `policy`, and `strategy` verification. 
