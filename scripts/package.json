@@ -12,6 +12,10 @@
   },
   "scripts": {
     "generate-proof": "bun run ./unit/generate-proof.ts",
+    "add-liquidity": "bun run ./add-liquidity.ts",
+    "add-liquidity-with-proofs": "bun run ./e2e/add-liquidity-with-proofs.ts",
+    "check-pool": "bun run ./e2e/check-pool-state.ts",
+    "init-pool": "bun run ./e2e/initialize-pool-direct.ts",
     "e2e": "bun run ./e2e/e2e.ts"
   },
   "dependencies": {

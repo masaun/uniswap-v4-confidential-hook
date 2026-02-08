@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.26;
 
 import "forge-std/Script.sol";
-import "../../../src/mocks/MockUSDC.sol";
+import "../../src/mocks/MockUSDC.sol";
 
 contract MintMockUSDC is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        address mockUSDCAddress = vm.envAddress("USDC_ADDRESS_MOCK_ON_ARBITRUM_SEPOLIA");
+        address mockUSDCAddress = vm.envAddress("MOCK_USDC_ADDRESS");
         
         // Default mint amount: 1,000,000 USDC (with 6 decimals)
         uint256 mintAmount = 1000000 * 10**6;
@@ -19,31 +19,41 @@ contract MintMockUSDC is Script {
             // Use default amount
         }
 
+        // Get recipient address - default to deployer, but can be overridden
+        address recipient;
+        try vm.envAddress("MINT_RECIPIENT") returns (address customRecipient) {
+            recipient = customRecipient;
+        } catch {
+            recipient = vm.addr(deployerPrivateKey);
+        }
+
         vm.startBroadcast(deployerPrivateKey);
 
         MockUSDC usdc = MockUSDC(mockUSDCAddress);
         
         console.log("Minting MockUSDC...");
         console.log("MockUSDC Address:", address(usdc));
-        console.log("Recipient:", msg.sender);
+        console.log("Recipient:", recipient);
         console.log("Amount to mint:", mintAmount);
         console.log("Amount in USDC:", mintAmount / 10**6);
 
         // Check balance before
-        uint256 balanceBefore = usdc.balanceOf(msg.sender);
+        uint256 balanceBefore = usdc.balanceOf(recipient);
         console.log("Balance before:", balanceBefore / 10**6, "USDC");
 
         // Mint tokens
-        usdc.mint(msg.sender, mintAmount);
+        usdc.mint(recipient, mintAmount);
 
         // Check balance after
-        uint256 balanceAfter = usdc.balanceOf(msg.sender);
+        uint256 balanceAfter = usdc.balanceOf(recipient);
         console.log("Balance after:", balanceAfter / 10**6, "USDC");
 
         vm.stopBroadcast();
 
-        console.log("\n=== Mint Summary ===");
+        console.log("");
+        console.log("=== Mint Summary ===");
         console.log("Minted:", mintAmount / 10**6, "USDC");
+        console.log("Recipient:", recipient);
         console.log("New Balance:", balanceAfter / 10**6, "USDC");
     }
 }
