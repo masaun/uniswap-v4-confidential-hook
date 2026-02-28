@@ -4,10 +4,6 @@
 target/
 
 
-
-
-
-
 # -------------------------------------------- #
 #        Smart Contract related Files          #
 # -------------------------------------------- #
@@ -28,6 +24,8 @@ docs/
 
 # Dotenv file
 .env
+.env.local
+.env.bak
 
 # Node modules
 node_modules/
