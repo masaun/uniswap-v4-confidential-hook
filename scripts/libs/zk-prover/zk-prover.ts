@@ -62,42 +62,12 @@ export interface MerkleTreeData {
   policyTree: IMT;
 }
 
-// Legacy Invoice type (kept for backward compatibility)
-export interface Invoice {
-  invoice_id: number;
-  invoice_supplier_id: number;
-  invoice_buyer_id: number;
-  invoice_amount: number;
-  invoice_due_date: number;
-  invoice_acceptance_timestamp: number;
-  secret: number;
-}
-
-export interface InvoiceCommitment {
-  commitment: bigint;
-  invoice: Invoice;
-}
-
 export const generateRandomInt = () => {
   return Math.floor(Math.random() * 1000000);
 };
 
 export const generateRandomField = () => {
   return BigInt(Math.floor(Math.random() * Number.MAX_SAFE_INTEGER));
-};
-
-/**
- * Creates an invoice commitment hash
- */
-export const createInvoiceCommitment = (invoice: Invoice): bigint => {
-  return poseidon_hash_6([
-    invoice.invoice_id,
-    invoice.invoice_supplier_id,
-    invoice.invoice_buyer_id,
-    invoice.invoice_amount,
-    invoice.invoice_due_date,
-    invoice.secret
-  ]);
 };
 
 /**
